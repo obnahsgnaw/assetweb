@@ -1,27 +1,20 @@
 package assetweb
 
 import (
-	"github.com/obnahsgnaw/assetweb/service/cors"
-	"io"
+	"github.com/obnahsgnaw/http/cors"
 )
 
 type Option func(*Server)
 
-func AccessWriter(w io.Writer) Option {
-	return func(s *Server) {
-		s.accessWriter = w
-	}
-}
-
-func ErrorWriter(w io.Writer) Option {
-	return func(s *Server) {
-		s.errorWriter = w
-	}
-}
-
 func Cors(c *cors.Config) Option {
 	return func(s *Server) {
 		s.corsCnf = c
+	}
+}
+
+func RouteDebug(fg bool) Option {
+	return func(s *Server) {
+		s.routeDebug = fg
 	}
 }
 
