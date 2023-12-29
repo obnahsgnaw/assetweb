@@ -3,43 +3,41 @@ package assetweb
 import (
 	"errors"
 	assetfs "github.com/elazarl/go-bindata-assetfs"
-	"github.com/gin-gonic/gin"
 	"github.com/obnahsgnaw/application"
 	"github.com/obnahsgnaw/application/endtype"
 	"github.com/obnahsgnaw/application/pkg/logging/logger"
 	"github.com/obnahsgnaw/application/pkg/url"
 	"github.com/obnahsgnaw/application/pkg/utils"
 	"github.com/obnahsgnaw/application/servertype"
-	"github.com/obnahsgnaw/assetweb/internal"
-	"github.com/obnahsgnaw/assetweb/service/cors"
+	"github.com/obnahsgnaw/http"
+	"github.com/obnahsgnaw/http/cors"
+	"github.com/obnahsgnaw/http/engine"
 	"go.uber.org/zap"
-	"io"
 	"os"
 )
 
 type Server struct {
 	name           string
 	app            *application.Application
-	port           int
+	host           url.Host
 	logger         *zap.Logger
 	err            error
-	engine         *gin.Engine
-	accessWriter   io.Writer
-	errorWriter    io.Writer
+	engine         *http.Http
 	corsCnf        *cors.Config
 	trustedProxies []string
 	staticDir      string
 	staticAsset    *assetfs.AssetFS
+	routeDebug     bool
 }
 
-func New(app *application.Application, name string, port int, option ...Option) *Server {
+func New(app *application.Application, name string, host url.Host, option ...Option) *Server {
 	if name == "" {
 		name = "asset-web"
 	}
 	s := &Server{
 		name: name,
 		app:  app,
-		port: port,
+		host: host,
 	}
 	s.logger, s.err = logger.New(name, app.LogConfig(), app.Debugger().Debug())
 	s.With(option...)
@@ -95,12 +93,13 @@ func (s *Server) Run(failedCb func(error)) {
 		failedCb(s.err)
 		return
 	}
-	s.engine, s.err = internal.NewEngine(&internal.EngineConfig{
-		Debug:          s.app.Debugger().Debug(),
-		AccessWriter:   s.accessWriter,
-		ErrWriter:      s.errorWriter,
+	s.engine, s.err = http.Default(s.host, &engine.Config{
+		Name:           s.name,
+		DebugMode:      s.routeDebug,
+		LogDebug:       s.app.Debugger().Debug() || s.app.LogConfig() == nil,
 		TrustedProxies: s.trustedProxies,
 		Cors:           s.corsCnf,
+		LogCnf:         s.app.LogConfig(),
 	})
 	if s.err != nil {
 		failedCb(s.err)
@@ -110,12 +109,8 @@ func (s *Server) Run(failedCb func(error)) {
 		s.initAsset()
 	}
 	go func() {
-		host := url.Host{
-			Ip:   "",
-			Port: s.port,
-		}
-		s.logger.Info(utils.ToStr(s.name, "[", host.String(), "] listen and serving..."))
-		if err := s.engine.Run(host.String()); err != nil {
+		s.logger.Info(utils.ToStr(s.name, "[http://", s.host.String(), "] listen and serving..."))
+		if err := s.engine.RunAndServ(); err != nil {
 			failedCb(err)
 		}
 	}()
@@ -123,7 +118,7 @@ func (s *Server) Run(failedCb func(error)) {
 
 func (s *Server) initStaticDir() bool {
 	if s.staticDir != "" {
-		s.engine.Static("/", s.staticDir)
+		s.engine.Engine().Static("/", s.staticDir)
 		return true
 	}
 	return false
@@ -131,7 +126,7 @@ func (s *Server) initStaticDir() bool {
 
 func (s *Server) initAsset() {
 	if s.staticAsset != nil {
-		s.engine.StaticFS("/", s.staticAsset)
+		s.engine.Engine().StaticFS("/", s.staticAsset)
 	}
 }
 
