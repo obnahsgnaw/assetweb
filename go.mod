@@ -6,8 +6,8 @@ require (
 	github.com/elazarl/go-bindata-assetfs v1.0.1
 	github.com/gookit/color v1.3.1
 	github.com/jessevdk/go-flags v1.5.0
-	github.com/obnahsgnaw/application v0.16.4
-	github.com/obnahsgnaw/http v0.1.6
+	github.com/obnahsgnaw/application v0.16.8
+	github.com/obnahsgnaw/http v0.1.8
 	github.com/spf13/viper v1.16.0
 	go.uber.org/zap v1.23.0
 )
