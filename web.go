@@ -5,7 +5,6 @@ import (
 	assetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/obnahsgnaw/application"
 	"github.com/obnahsgnaw/application/endtype"
-	"github.com/obnahsgnaw/application/pkg/logging/logger"
 	"github.com/obnahsgnaw/application/pkg/url"
 	"github.com/obnahsgnaw/application/pkg/utils"
 	"github.com/obnahsgnaw/application/servertype"
@@ -39,7 +38,7 @@ func New(app *application.Application, name string, host url.Host, option ...Opt
 		app:  app,
 		host: host,
 	}
-	s.logger, s.err = logger.New(name, app.LogConfig(), app.Debugger().Debug())
+	s.logger = app.Logger().Named(name)
 	s.With(option...)
 	return s
 }
