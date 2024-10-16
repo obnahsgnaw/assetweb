@@ -2,6 +2,7 @@ export PACKAGE=github.com/obnahsgnaw/assetweb
 export INPUT=cmd/main.go
 export OUT=out
 export APP=asset-web
+export ASSET_VERSION=v0.0.0
 
 
 .PHONY: help
