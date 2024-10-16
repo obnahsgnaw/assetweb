@@ -7,7 +7,10 @@ import (
 	"github.com/obnahsgnaw/application/pkg/utils"
 	"github.com/obnahsgnaw/assetweb"
 	"github.com/obnahsgnaw/assetweb/config"
+	"github.com/obnahsgnaw/assetweb/html"
+	"io/fs"
 	"log"
+	http2 "net/http"
 	"os"
 )
 
@@ -44,6 +47,8 @@ func main() {
 			os.Exit(2)
 		}
 	}
+	sub, _ := fs.Sub(html.FS, "www")
+	s.RegisterAsset(http2.FS(sub))
 
 	app.AddServer(s)
 

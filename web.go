@@ -2,7 +2,6 @@ package assetweb
 
 import (
 	"errors"
-	assetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/obnahsgnaw/application"
 	"github.com/obnahsgnaw/application/endtype"
 	"github.com/obnahsgnaw/application/pkg/url"
@@ -12,6 +11,7 @@ import (
 	"github.com/obnahsgnaw/http/cors"
 	"github.com/obnahsgnaw/http/engine"
 	"go.uber.org/zap"
+	http2 "net/http"
 	"os"
 )
 
@@ -25,7 +25,7 @@ type Server struct {
 	corsCnf        *cors.Config
 	trustedProxies []string
 	staticDir      string
-	staticAsset    *assetfs.AssetFS
+	staticAsset    http2.FileSystem
 	routeDebug     bool
 }
 
@@ -77,7 +77,7 @@ func (s *Server) RegisterDir(dirPath string) error {
 }
 
 // RegisterAsset register the asset
-func (s *Server) RegisterAsset(asset *assetfs.AssetFS) {
+func (s *Server) RegisterAsset(asset http2.FileSystem) {
 	s.staticAsset = asset
 }
 
