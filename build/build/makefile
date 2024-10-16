@@ -2,6 +2,7 @@ PACKAGE_NAME :=${PACKAGE}
 APP_NAME := $(if $(APP),$(APP),"APP")
 OUT_NAME := $(if $(OUT),$(OUT),"out")
 INPUT_NAME := $(if $(INPUT),$(INPUT),"main.go")
+ASSET_VERSION := $(if $(ASSET_VERSION),$(ASSET_VERSION),"v0.0.0")
 
 ARCH=amd64
 PLATFORM_WIN=windows
@@ -22,11 +23,11 @@ LDFLAGS    := -w -s
 BUILD_DATE =  $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 
 ifneq ($(wildcard .git),)
-VERSION   =  v1.0.1
+VERSION   =  v0.0.0
 GIT_COMMIT ?= $(shell git rev-parse HEAD)
 GIT_DIRTY  =  $(shell test -n "`git status --porcelain`" && echo "dirty" || echo "clean")
 else
-VERSION=v1.0.1
+VERSION=v0.0.0
 GIT_COMMIT=
 GIT_DIRTY=
 endif
@@ -34,6 +35,7 @@ endif
 ifneq ($(PACKAGE_NAME),)
 LDFLAGS += -X $(PACKAGE_NAME)/version.name=$(APP_NAME)
 LDFLAGS += -X $(PACKAGE_NAME)/version.version=$(VERSION)
+LDFLAGS += -X $(PACKAGE_NAME)/version.assetVersion=$(ASSET_VERSION)
 LDFLAGS += -X $(PACKAGE_NAME)/version.gitCommit=$(GIT_COMMIT)
 LDFLAGS += -X $(PACKAGE_NAME)/version.gitTreeState=$(GIT_DIRTY)
 LDFLAGS += -X $(PACKAGE_NAME)/version.buildDate=$(BUILD_DATE)
