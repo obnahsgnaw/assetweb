@@ -27,6 +27,12 @@ func CorsAll() Option {
 	}
 }
 
+func CacheTtl(ttl int64) Option {
+	return func(s *Server) {
+		s.cacheTtl = ttl
+	}
+}
+
 func CorsOne(origin string) Option {
 	return func(s *Server) {
 		s.corsCnf = &cors.Config{

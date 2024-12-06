@@ -1,16 +1,21 @@
 package assetweb
 
 import (
+	"embed"
 	"errors"
+	"github.com/gin-contrib/gzip"
 	"github.com/obnahsgnaw/application"
 	"github.com/obnahsgnaw/application/endtype"
+	"github.com/obnahsgnaw/application/pkg/logging/logger"
 	"github.com/obnahsgnaw/application/pkg/url"
 	"github.com/obnahsgnaw/application/pkg/utils"
 	"github.com/obnahsgnaw/application/servertype"
+	"github.com/obnahsgnaw/assetweb/html"
 	"github.com/obnahsgnaw/http"
 	"github.com/obnahsgnaw/http/cors"
 	"github.com/obnahsgnaw/http/engine"
 	"go.uber.org/zap"
+	"io/fs"
 	http2 "net/http"
 	"os"
 )
@@ -25,8 +30,11 @@ type Server struct {
 	corsCnf        *cors.Config
 	trustedProxies []string
 	staticDir      string
-	staticAsset    http2.FileSystem
+	staticAsset    *embed.FS
+	staticRoot     string
 	routeDebug     bool
+	etagManager    *EtagManager
+	cacheTtl       int64
 }
 
 func New(app *application.Application, name string, host url.Host, option ...Option) *Server {
@@ -77,8 +85,9 @@ func (s *Server) RegisterDir(dirPath string) error {
 }
 
 // RegisterAsset register the asset
-func (s *Server) RegisterAsset(asset http2.FileSystem) {
+func (s *Server) RegisterAsset(asset *embed.FS, root string) {
 	s.staticAsset = asset
+	s.staticRoot = root
 }
 
 func (s *Server) With(option ...Option) {
@@ -92,20 +101,44 @@ func (s *Server) Run(failedCb func(error)) {
 		failedCb(s.err)
 		return
 	}
-	s.engine, s.err = http.Default(s.host, &engine.Config{
+	var err error
+	cnf := &engine.Config{
 		Name:           s.name,
 		DebugMode:      s.routeDebug,
-		LogDebug:       s.app.Debugger().Debug() || s.app.LogConfig() == nil,
+		AccessWriter:   nil,
+		ErrWriter:      nil,
 		TrustedProxies: s.trustedProxies,
 		Cors:           s.corsCnf,
-		LogCnf:         s.app.LogConfig(),
+		DefFavicon:     false,
+	}
+	cnf.AccessWriter, err = logger.NewDefAccessWriter(s.app.LogConfig(), func() bool {
+		return s.app.Debugger().Debug()
 	})
+	if err != nil {
+		failedCb(err)
+		return
+	}
+	cnf.ErrWriter, err = logger.NewDefErrorWriter(s.app.LogConfig(), func() bool {
+		return s.app.Debugger().Debug()
+	})
+	if err != nil {
+		failedCb(err)
+		return
+	}
+	s.engine, s.err = http.Default(s.host.Ip, s.host.Port, cnf)
+	s.engine.Engine().Use(gzip.Gzip(gzip.DefaultCompression), CacheMiddleware(s, s.cacheTtl))
 	if s.err != nil {
 		failedCb(s.err)
 		return
 	}
 	if !s.initStaticDir() {
 		s.initAsset()
+	}
+	if s.cacheTtl > 0 {
+		if err = s.etagManager.Init(); err != nil {
+			failedCb(err)
+			return
+		}
 	}
 	go func() {
 		s.logger.Info(utils.ToStr(s.name, "[http://", s.host.String(), "] listen and serving..."))
@@ -117,6 +150,7 @@ func (s *Server) Run(failedCb func(error)) {
 
 func (s *Server) initStaticDir() bool {
 	if s.staticDir != "" {
+		s.etagManager = newEtagManagerWithDir(s.staticDir)
 		s.engine.Engine().Static("/", s.staticDir)
 		return true
 	}
@@ -125,7 +159,9 @@ func (s *Server) initStaticDir() bool {
 
 func (s *Server) initAsset() {
 	if s.staticAsset != nil {
-		s.engine.Engine().StaticFS("/", s.staticAsset)
+		s.etagManager = newEtagManagerWithFs(s.staticAsset, s.staticRoot)
+		sub, _ := fs.Sub(html.FS, "www")
+		s.engine.Engine().StaticFS("/", http2.FS(sub))
 	}
 }
 
