@@ -1,6 +1,8 @@
 package html
 
-import "embed"
+import (
+	"embed"
+)
 
 //go:embed all:www
 var FS embed.FS

@@ -4,32 +4,32 @@ import (
 	"github.com/gookit/color"
 	"github.com/obnahsgnaw/application"
 	"github.com/obnahsgnaw/application/pkg/url"
-	"github.com/obnahsgnaw/application/pkg/utils"
 	"github.com/obnahsgnaw/assetweb"
 	"github.com/obnahsgnaw/assetweb/config"
 	"github.com/obnahsgnaw/assetweb/html"
-	"io/fs"
+	"github.com/obnahsgnaw/goutils/runtimeutil"
 	"log"
-	http2 "net/http"
 	"os"
 )
 
 func main() {
-	var cnf *config.Config
-	var err error
 	var app *application.Application
-	utils.RecoverHandler("asset web", func(err, stack string) {
+	runtimeutil.HandleRecover(func(errMsg, stack string) {
 		if app != nil {
-			app.Logger().Error(err)
+			app.Logger().Error(errMsg)
 		}
 	})
-	if cnf, err = config.Parse(); err != nil {
+
+	cnf, err := config.Parse()
+	if err != nil {
 		color.Error.Println("config parse failed, err=" + err.Error())
 		os.Exit(1)
 	}
-	app = application.New(application.NewCluster(cnf.Application.Id, cnf.Application.Name), cnf.Http.Name,
+
+	app = application.New(cnf.Http.Name,
+		application.CusCluster(application.NewCluster(cnf.Application.Id, cnf.Application.Name)),
 		application.Debug(func() bool {
-			return false
+			return cnf.Application.Debug
 		}),
 		application.Logger(cnf.Log),
 	)
@@ -39,6 +39,7 @@ func main() {
 		assetweb.Cors(cnf.Cors),
 		assetweb.TrustedProxies(cnf.Http.TrustedProxies),
 		assetweb.RouteDebug(cnf.Http.RouteDebug),
+		assetweb.CacheTtl(86400),
 	)
 
 	if dir := cnf.Http.Directory(); dir != "" {
@@ -47,15 +48,15 @@ func main() {
 			os.Exit(2)
 		}
 	}
-	sub, _ := fs.Sub(html.FS, "www")
-	s.RegisterAsset(http2.FS(sub))
+
+	s.RegisterAsset(&html.FS, "www")
 
 	app.AddServer(s)
 
 	app.Run(func(err error) {
 		color.Error.Println(err.Error())
 	})
-	app.Wait()
 
-	log.Println("Exited")
+	app.Wait()
+	log.Println("Server done")
 }
