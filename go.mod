@@ -3,12 +3,11 @@ module github.com/obnahsgnaw/assetweb
 go 1.19
 
 require (
-	github.com/gin-contrib/gzip v1.0.1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/gookit/color v1.3.1
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/obnahsgnaw/application v0.17.16
-	github.com/obnahsgnaw/goutils v0.4.1
+	github.com/obnahsgnaw/goutils v0.9.0
 	github.com/obnahsgnaw/http v0.2.10
 	github.com/spf13/viper v1.16.0
 	go.uber.org/zap v1.23.0
@@ -24,6 +23,7 @@ require (
 	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
+	github.com/gin-contrib/gzip v1.0.1 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
