@@ -10,7 +10,6 @@ import (
 	"github.com/obnahsgnaw/application/pkg/url"
 	"github.com/obnahsgnaw/application/pkg/utils"
 	"github.com/obnahsgnaw/application/servertype"
-	"github.com/obnahsgnaw/assetweb/html"
 	"github.com/obnahsgnaw/http"
 	"github.com/obnahsgnaw/http/cors"
 	"github.com/obnahsgnaw/http/engine"
@@ -160,7 +159,7 @@ func (s *Server) initStaticDir() bool {
 func (s *Server) initAsset() {
 	if s.staticAsset != nil {
 		s.etagManager = newEtagManagerWithFs(s.staticAsset, s.staticRoot)
-		sub, _ := fs.Sub(html.FS, "www")
+		sub, _ := fs.Sub(s.staticAsset, s.staticRoot)
 		s.engine.Engine().StaticFS("/", http2.FS(sub))
 	}
 }
