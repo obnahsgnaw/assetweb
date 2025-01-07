@@ -3,19 +3,17 @@ package assetweb
 import (
 	"embed"
 	"errors"
-	"github.com/gin-contrib/gzip"
 	"github.com/obnahsgnaw/application"
 	"github.com/obnahsgnaw/application/endtype"
 	"github.com/obnahsgnaw/application/pkg/logging/logger"
 	"github.com/obnahsgnaw/application/pkg/url"
 	"github.com/obnahsgnaw/application/pkg/utils"
 	"github.com/obnahsgnaw/application/servertype"
+	"github.com/obnahsgnaw/goutils/ginutil"
 	"github.com/obnahsgnaw/http"
 	"github.com/obnahsgnaw/http/cors"
 	"github.com/obnahsgnaw/http/engine"
 	"go.uber.org/zap"
-	"io/fs"
-	http2 "net/http"
 	"os"
 )
 
@@ -32,7 +30,7 @@ type Server struct {
 	staticAsset    *embed.FS
 	staticRoot     string
 	routeDebug     bool
-	etagManager    *EtagManager
+	etagManager    *ginutil.StaticFsCache
 	cacheTtl       int64
 }
 
@@ -125,7 +123,6 @@ func (s *Server) Run(failedCb func(error)) {
 		return
 	}
 	s.engine, s.err = http.Default(s.host.Ip, s.host.Port, cnf)
-	s.engine.Engine().Use(gzip.Gzip(gzip.DefaultCompression), CacheMiddleware(s, s.cacheTtl))
 	if s.err != nil {
 		failedCb(s.err)
 		return
@@ -149,8 +146,7 @@ func (s *Server) Run(failedCb func(error)) {
 
 func (s *Server) initStaticDir() bool {
 	if s.staticDir != "" {
-		s.etagManager = newEtagManagerWithDir(s.staticDir)
-		s.engine.Engine().Static("/", s.staticDir)
+		s.etagManager = ginutil.NewStaticFsCache(s.engine.Engine(), s.staticDir, ginutil.CaCheTtl(s.cacheTtl))
 		return true
 	}
 	return false
@@ -158,9 +154,7 @@ func (s *Server) initStaticDir() bool {
 
 func (s *Server) initAsset() {
 	if s.staticAsset != nil {
-		s.etagManager = newEtagManagerWithFs(s.staticAsset, s.staticRoot)
-		sub, _ := fs.Sub(s.staticAsset, s.staticRoot)
-		s.engine.Engine().StaticFS("/", http2.FS(sub))
+		s.etagManager = ginutil.NewStaticFsCache(s.engine.Engine(), s.staticRoot, ginutil.Fs(s.staticAsset), ginutil.CaCheTtl(s.cacheTtl))
 	}
 }
 
