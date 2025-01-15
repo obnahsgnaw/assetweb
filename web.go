@@ -32,6 +32,7 @@ type Server struct {
 	routeDebug     bool
 	etagManager    *ginutil.StaticFsCache
 	cacheTtl       int64
+	replace        map[string]func([]byte) []byte
 }
 
 func New(app *application.Application, name string, host url.Host, option ...Option) *Server {
@@ -146,7 +147,7 @@ func (s *Server) Run(failedCb func(error)) {
 
 func (s *Server) initStaticDir() bool {
 	if s.staticDir != "" {
-		s.etagManager = ginutil.NewStaticFsCache(s.engine.Engine(), s.staticDir, ginutil.CaCheTtl(s.cacheTtl))
+		s.etagManager = ginutil.NewStaticFsCache(s.engine.Engine(), s.staticDir, ginutil.CaCheTtl(s.cacheTtl), ginutil.Replace(s.replace))
 		return true
 	}
 	return false
@@ -154,7 +155,7 @@ func (s *Server) initStaticDir() bool {
 
 func (s *Server) initAsset() {
 	if s.staticAsset != nil {
-		s.etagManager = ginutil.NewStaticFsCache(s.engine.Engine(), s.staticRoot, ginutil.Fs(s.staticAsset), ginutil.CaCheTtl(s.cacheTtl))
+		s.etagManager = ginutil.NewStaticFsCache(s.engine.Engine(), s.staticRoot, ginutil.Fs(s.staticAsset), ginutil.CaCheTtl(s.cacheTtl), ginutil.Replace(s.replace))
 	}
 }
 
