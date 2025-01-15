@@ -47,3 +47,11 @@ func TrustedProxies(proxies []string) Option {
 		s.trustedProxies = proxies
 	}
 }
+
+func Replace(rp map[string]func([]byte) []byte) Option {
+	return func(s *Server) {
+		if rp != nil {
+			s.replace = rp
+		}
+	}
+}

@@ -10,6 +10,7 @@ import (
 	"github.com/obnahsgnaw/goutils/runtimeutil"
 	"log"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -40,6 +41,11 @@ func main() {
 		assetweb.TrustedProxies(cnf.Http.TrustedProxies),
 		assetweb.RouteDebug(cnf.Http.RouteDebug),
 		assetweb.CacheTtl(86400),
+		assetweb.Replace(map[string]func([]byte) []byte{
+			"/config.json": func(b []byte) []byte {
+				return []byte(strings.ReplaceAll(string(b), "127.0.0.1", "127.0.0.2"))
+			},
+		}),
 	)
 
 	if dir := cnf.Http.Directory(); dir != "" {
