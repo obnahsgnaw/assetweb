@@ -1,8 +1,8 @@
 application:
   # cluster id if not set the server will run as a independent server, and id will be set as independent_Project.key()
-  id: dazhou
+  id: jj2
   # cluster name default as the cluster id
-  name: dazhou
+  name: jj2
   # internal server ip, other can access, 0.0.0.0
   internalIp: 127.0.0.1
   # print cli log or not
@@ -22,7 +22,7 @@ log:
   # trace level, default=error,  debug,info, warn,error...
   traceLevel: error
 http:
-  Name: dazhou
+  Name: jj2
   # Trusted proxy ip, the gateway ip, multi
   trustedProxies:
     - 127.0.0.1
@@ -30,3 +30,5 @@ http:
   routeDebug: false
   # port
   port: 8090
+  # Api Host
+  apiHost: 127.0.0.1

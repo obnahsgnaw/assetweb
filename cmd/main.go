@@ -43,7 +43,7 @@ func main() {
 		assetweb.CacheTtl(86400),
 		assetweb.Replace(map[string]func([]byte) []byte{
 			"/config.json": func(b []byte) []byte {
-				return []byte(strings.ReplaceAll(string(b), "127.0.0.1", "127.0.0.2"))
+				return []byte(strings.ReplaceAll(string(b), "127.0.0.1", cnf.Http.ApiHost))
 			},
 		}),
 	)

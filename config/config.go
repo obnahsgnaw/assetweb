@@ -41,6 +41,7 @@ type Http struct {
 	Port           int      `long:"port" description:"http port"`
 	Dir            string   `long:"dir" description:"http dir"`
 	Current        bool     `short:"t" long:"cur" description:"http use current pwd dir"`
+	ApiHost        string   `short:"h" long:"api-host" description:"api host"`
 }
 
 func (s *Http) Directory() string {
