@@ -28,6 +28,10 @@ http:
     - 127.0.0.1
   #enable http engine to debug mode
   routeDebug: false
+  # asset dir or root dir
+  dir:
+  # dir as root, without pkg asset
+  dirRoot: false
   # port
   port: 8090
   # Api Host

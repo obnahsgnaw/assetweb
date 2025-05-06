@@ -49,7 +49,7 @@ func main() {
 	)
 
 	if dir := cnf.Http.Directory(); dir != "" {
-		if err = s.RegisterDir(dir); err != nil {
+		if err = s.RegisterDir(dir, cnf.Http.DirRoot); err != nil {
 			color.Error.Println("dir failed, err=" + err.Error())
 			os.Exit(2)
 		}
