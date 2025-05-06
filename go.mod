@@ -6,7 +6,7 @@ require (
 	github.com/gookit/color v1.3.1
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/obnahsgnaw/application v0.17.16
-	github.com/obnahsgnaw/goutils v0.9.2
+	github.com/obnahsgnaw/goutils v0.10.0
 	github.com/obnahsgnaw/http v0.2.10
 	github.com/spf13/viper v1.16.0
 	go.uber.org/zap v1.23.0

@@ -33,6 +33,8 @@ type Server struct {
 	etagManager    *ginutil.StaticFsCache
 	cacheTtl       int64
 	replace        map[string]func([]byte) []byte
+
+	staticDirForRoot bool
 }
 
 func New(app *application.Application, name string, host url.Host, option ...Option) *Server {
@@ -43,6 +45,8 @@ func New(app *application.Application, name string, host url.Host, option ...Opt
 		name: name,
 		app:  app,
 		host: host,
+
+		cacheTtl: 3600,
 	}
 	s.logger = app.Logger().Named(name)
 	s.With(option...)
@@ -66,7 +70,7 @@ func (s *Server) EndType() endtype.EndType {
 }
 
 // RegisterDir register a dir
-func (s *Server) RegisterDir(dirPath string) error {
+func (s *Server) RegisterDir(dirPath string, root bool) error {
 	if dirPath == "" {
 		return errors.New("dir required")
 	}
@@ -78,6 +82,7 @@ func (s *Server) RegisterDir(dirPath string) error {
 		return errors.New(dirPath + " is not a dir")
 	}
 	s.staticDir = dirPath
+	s.staticDirForRoot = root
 
 	return nil
 }
@@ -131,11 +136,9 @@ func (s *Server) Run(failedCb func(error)) {
 	if !s.initStaticDir() {
 		s.initAsset()
 	}
-	if s.cacheTtl > 0 {
-		if err = s.etagManager.Init(); err != nil {
-			failedCb(err)
-			return
-		}
+	if err = s.etagManager.Init(); err != nil {
+		failedCb(err)
+		return
 	}
 	go func() {
 		s.logger.Info(utils.ToStr(s.name, "[http://", s.host.String(), "] listen and serving..."))
@@ -146,7 +149,7 @@ func (s *Server) Run(failedCb func(error)) {
 }
 
 func (s *Server) initStaticDir() bool {
-	if s.staticDir != "" {
+	if s.staticDir != "" && (s.staticDirForRoot || s.staticAsset == nil) {
 		s.etagManager = ginutil.NewStaticFsCache(s.engine.Engine(), s.staticDir, ginutil.CaCheTtl(s.cacheTtl), ginutil.Replace(s.replace))
 		return true
 	}
@@ -155,7 +158,7 @@ func (s *Server) initStaticDir() bool {
 
 func (s *Server) initAsset() {
 	if s.staticAsset != nil {
-		s.etagManager = ginutil.NewStaticFsCache(s.engine.Engine(), s.staticRoot, ginutil.Fs(s.staticAsset), ginutil.CaCheTtl(s.cacheTtl), ginutil.Replace(s.replace))
+		s.etagManager = ginutil.NewStaticFsCache(s.engine.Engine(), s.staticRoot, ginutil.Fs(s.staticAsset), ginutil.CaCheTtl(s.cacheTtl), ginutil.Replace(s.replace), ginutil.FsFallbackDir(s.staticDir))
 	}
 }
 
