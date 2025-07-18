@@ -1,4 +1,4 @@
-package assetweb
+package web
 
 import (
 	"github.com/obnahsgnaw/http/cors"

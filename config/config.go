@@ -27,22 +27,27 @@ type Config struct {
 }
 
 type Application struct {
-	Id         string `long:"cluster-id" description:"Cluster id" required:"true" default:"dev"`
-	Name       string `long:"cluster-name" description:"Cluster name" required:"true" default:"Dev"`
-	InternalIp string `long:"internal-ip" description:"Server ip address"`
+	Id         string `long:"cluster-id" description:"Cluster id" required:"true" default:"web"`
+	Name       string `long:"cluster-name" description:"Cluster name" required:"true" default:"web"`
+	InternalIp string `long:"internal-ip" description:"Server ip address" `
 	Debug      bool   `long:"debug" description:"Enable debug"`
 }
 
 type Http struct {
 	curDir         string
-	Name           string   `long:"name" description:"http name"`
-	TrustedProxies []string `long:"trusted-ip" description:"Trusted proxy ip, the gateway ip, multi"`
-	RouteDebug     bool     `long:"route-debug" description:"enable http engine to debug mode"`
-	Port           int      `long:"port" description:"http port"`
-	Dir            string   `long:"dir" description:"http dir"`
-	Current        bool     `short:"t" long:"cur" description:"http use current pwd dir"`
-	DirRoot        bool     `short:"r" long:"dir-root" description:"use dir as root"`
-	ApiHost        string   `short:"h" long:"api-host" description:"api host"`
+	Name           string        `long:"name" description:"http name" required:"true" default:"web"`
+	TrustedProxies []string      `long:"trusted-ip" description:"Trusted proxy ip, the gateway ip, multi"`
+	RouteDebug     bool          `long:"route-debug" description:"enable http engine to debug mode"`
+	Port           int           `long:"port" description:"http port" required:"true" default:"8080"`
+	Dir            string        `long:"dir" description:"http dir"`
+	Current        bool          `long:"current" description:"http use current pwd dir"`
+	DirRoot        bool          `long:"dir-root" description:"use dir as root, otherwise static asset as root and dir as fallback"`
+	Replace        []ReplaceItem `long:"replace" description:"replace file item"`
+}
+
+type ReplaceItem struct {
+	File  string            `long:"file" description:"file to replace"`
+	Items map[string]string `long:"items" description:"item to replace"`
 }
 
 func (s *Http) Directory() string {
