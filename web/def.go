@@ -17,8 +17,6 @@ type Web struct {
 	app    *application.Application
 	server *Server
 	cnf    *config.Config
-	fs     *embed.FS
-	root   string
 	opts   []Option
 	err    error
 }
@@ -32,16 +30,16 @@ func Default(options ...Option) *Web {
 }
 
 func (w *Web) WithFS(fs embed.FS, root string) {
-	w.fs = &fs
-	w.root = root
+	if root != "" {
+		w.server.RegisterAsset(&fs, root)
+	}
+}
+
+func (w *Web) WithVersionProvider(p func() string) {
+	w.cnf.SetVersionProvider(p)
 }
 
 func (w *Web) init() {
-	runtimeutil.HandleRecover(func(errMsg, stack string) {
-		if w.app != nil {
-			w.app.Logger().Error(errMsg)
-		}
-	})
 	if w.cnf, w.err = config.Parse(); w.err != nil {
 		w.err = errors.New("config parse failed, err=" + w.err.Error())
 		return
@@ -53,7 +51,6 @@ func (w *Web) init() {
 		}),
 		application.Logger(w.cnf.Log),
 	)
-	defer w.app.Release()
 
 	var rp map[string]func([]byte) []byte
 	for _, item := range w.cnf.Http.Replace {
@@ -78,6 +75,7 @@ func (w *Web) init() {
 			return
 		}
 	}
+	w.app.AddServer(w.server)
 	return
 }
 
@@ -86,19 +84,19 @@ func (w *Web) Serve() {
 		color.Error.Println("config parse failed, err=" + w.err.Error())
 		os.Exit(1)
 	}
-	if w.fs != nil && w.root != "" {
-		w.server.RegisterAsset(w.fs, w.root)
-	}
-	w.app.AddServer(w.server)
+	runtimeutil.HandleRecover(func(errMsg, stack string) {
+		if w.app != nil {
+			w.app.Logger().Error(errMsg)
+		}
+	})
+	defer w.app.Release()
 	w.app.Run(func(err error) {
 		color.Error.Println(err.Error())
 	})
 	if w.Config().Http.Directory() != "" {
-		color.Info.Println(fmt.Sprintf("asset web[%s] root directory: %s", w.Config().Http.Name, w.Config().Http.Directory()))
+		w.app.Logger().Info(fmt.Sprintf("root directory: %s", w.Config().Http.Directory()))
 	}
-	color.Info.Println(fmt.Sprintf("asset web[%s] serving at: http://%s:%d", w.Config().Http.Name, w.Config().Application.InternalIp, w.Config().Http.Port))
 	w.app.Wait()
-	color.Info.Println(fmt.Sprintf("asset web[%s] done", w.Config().Http.Name))
 }
 
 func (w *Web) Config() *config.Config {

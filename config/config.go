@@ -18,12 +18,13 @@ import (
 var Conf *Config
 
 type Config struct {
-	Version     bool   `short:"v" long:"version" description:"show version"`
-	IniFile     string `short:"c" long:"conf" description:"Ini file"`
-	Application *Application
-	Log         *logger.Config
-	Cors        *cors.Config
-	Http        *Http
+	Version        bool   `short:"v" long:"version" description:"show version"`
+	IniFile        string `short:"c" long:"conf" description:"Ini file"`
+	Application    *Application
+	Log            *logger.Config
+	Cors           *cors.Config
+	Http           *Http
+	versionProvide func() string
 }
 
 type Application struct {
@@ -49,6 +50,10 @@ type Http struct {
 type ReplaceItem struct {
 	File  string            `long:"file" description:"file to replace"`
 	Items map[string]string `long:"items" description:"item to replace"`
+}
+
+func (c *Config) SetVersionProvider(p func() string) {
+	c.versionProvide = p
 }
 
 func (s *Http) Directory() string {
@@ -79,7 +84,11 @@ func Parse() (*Config, error) {
 	Conf = &opt
 
 	if Conf.Version {
-		fmt.Println(version.Info().String())
+		if Conf.versionProvide != nil {
+			fmt.Println(Conf.versionProvide())
+		} else {
+			fmt.Println(version.Info().String())
+		}
 		os.Exit(0)
 	}
 
@@ -107,6 +116,7 @@ func Parse() (*Config, error) {
 			Debug:      false,
 		}
 	}
+
 	if Conf.Application.InternalIp == "" {
 		Conf.Application.InternalIp = getLocalIp()
 	}
@@ -126,12 +136,17 @@ func Parse() (*Config, error) {
 		}
 		Conf.Http.Dir = dr
 	}
+
 	if Conf.Http.Current {
 		dr, err := os.Getwd()
 		if err != nil {
 			return nil, configError("current dir fetch failed", nil)
 		}
 		Conf.Http.curDir = dr
+	}
+
+	if Conf.Log == nil || Conf.Log.Dir == "" {
+		Conf.Application.Debug = true
 	}
 
 	return Conf, nil
