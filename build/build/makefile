@@ -2,7 +2,6 @@ PACKAGE_NAME :=${PACKAGE}
 APP_NAME := $(if $(APP),$(APP),"APP")
 OUT_NAME := $(if $(OUT),$(OUT),"out")
 INPUT_NAME := $(if $(INPUT),$(INPUT),"main.go")
-ASSET_VERSION := $(if $(ASSET_VERSION),$(ASSET_VERSION),"v0.0.0")
 
 ARCH=amd64
 PLATFORM_WIN=windows
@@ -35,7 +34,6 @@ endif
 ifneq ($(PACKAGE_NAME),)
 LDFLAGS += -X $(PACKAGE_NAME)/version.name=$(APP_NAME)
 LDFLAGS += -X $(PACKAGE_NAME)/version.version=$(VERSION)
-LDFLAGS += -X $(PACKAGE_NAME)/version.assetVersion=$(ASSET_VERSION)
 LDFLAGS += -X $(PACKAGE_NAME)/version.gitCommit=$(GIT_COMMIT)
 LDFLAGS += -X $(PACKAGE_NAME)/version.gitTreeState=$(GIT_DIRTY)
 LDFLAGS += -X $(PACKAGE_NAME)/version.buildDate=$(BUILD_DATE)

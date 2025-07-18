@@ -9,8 +9,6 @@ var (
 	name = "-"
 	// The version is in string format and follow the ([v|V]Major.Minor.Patch[-Prerelease][+BuildMetadata])
 	version = "v0.0.0"
-	// asset version
-	assetVersion = "v0.0.0"
 	// gitCommit is the git sha1
 	gitCommit = "-"
 	// gitTreeState is the state of the git tree
@@ -25,8 +23,6 @@ type BuildInfo struct {
 	Name string `json:"name,omitempty"`
 	// Version is the current semver.
 	Version string `json:"version,omitempty"`
-	// Version is the current semver.
-	AssetVersion string `json:"asset_version,omitempty"`
 	// GitCommit is the git sha1.
 	GitCommit string `json:"gitCommit,omitempty"`
 	// GitTreeState is the state of the git tree.
@@ -44,10 +40,9 @@ type BuildInfo struct {
 
 func (b BuildInfo) String() string {
 	return fmt.Sprintf(
-		"%s engine version: %s, asset version: %s \nBuild Date: %s, Go Version: %s, Compiler: %s, Platform: %s \n",
+		"%s version: %s \nBuild Date: %s, Go Version: %s, Compiler: %s, Platform: %s \n",
 		b.Name,
 		b.Version,
-		b.AssetVersion,
 		b.BuildDate,
 		b.GoVersion,
 		b.Compiler,
@@ -65,7 +60,6 @@ func Info() BuildInfo {
 	v := BuildInfo{
 		Name:         name,
 		Version:      version,
-		AssetVersion: assetVersion,
 		GitCommit:    gitCommit,
 		GitTreeState: gitTreeState,
 		BuildDate:    buildDate,
