@@ -58,7 +58,7 @@ func (w *Web) init() {
 		application.Logger(w.cnf.Log),
 	)
 
-	var rp map[string]func([]byte) []byte
+	rp := make(map[string]func([]byte) []byte)
 	for _, item := range w.cnf.Http.Replace {
 		for k, v := range item.Items {
 			rp[item.File] = func(b []byte) []byte {

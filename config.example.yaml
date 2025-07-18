@@ -22,7 +22,7 @@ log:
   # trace level, default=error,  debug,info, warn,error...
   traceLevel: error
 http:
-  Name: dev
+  name: dev
   # Trusted proxy ip, the gateway ip, multi
   trustedProxies:
     - 127.0.0.1
@@ -40,4 +40,4 @@ http:
   replace:
     - file: "/config.json"
       items:
-        "127.0.0.1":"127.0.0.1"
+        "127.0.0.1": "127.0.0.1"
