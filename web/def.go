@@ -30,12 +30,18 @@ func Default(options ...Option) *Web {
 }
 
 func (w *Web) WithFS(fs embed.FS, root string) {
+	if w.err != nil {
+		return
+	}
 	if root != "" {
 		w.server.RegisterAsset(&fs, root)
 	}
 }
 
 func (w *Web) WithVersionProvider(p func() string) {
+	if w.err != nil {
+		return
+	}
 	w.cnf.SetVersionProvider(p)
 }
 
