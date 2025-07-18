@@ -42,6 +42,7 @@ type Http struct {
 	Dir            string        `long:"dir" description:"http dir"`
 	Current        bool          `long:"current" description:"http use current pwd dir"`
 	DirRoot        bool          `long:"dir-root" description:"use dir as root, otherwise static asset as root and dir as fallback"`
+	CacheTtl       int64         `long:"cache-ttl" description:"cache ttl" default:"86400"`
 	Replace        []ReplaceItem `long:"replace" description:"replace file item"`
 }
 

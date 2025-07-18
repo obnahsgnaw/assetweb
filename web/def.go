@@ -70,7 +70,7 @@ func (w *Web) init() {
 		Cors(cnf.Cors),
 		TrustedProxies(cnf.Http.TrustedProxies),
 		RouteDebug(cnf.Http.RouteDebug),
-		CacheTtl(86400),
+		CacheTtl(cnf.Http.CacheTtl),
 		Replace(rp),
 	}, w.opts...)
 	s := New(w.app, cnf.Http.Name, url.New(cnf.Application.InternalIp, cnf.Http.Port), options...)

@@ -32,6 +32,8 @@ http:
   dir:
   # dir as root, without pkg asset
   dirRoot: false
+  # static cache ttl
+  cacheTtl: 86400
   # port
   port: 8090
   # replace
