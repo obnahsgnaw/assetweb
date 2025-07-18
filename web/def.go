@@ -14,12 +14,13 @@ import (
 )
 
 type Web struct {
-	app  *application.Application
-	c    *config.Config
-	fs   *embed.FS
-	root string
-	opts []Option
-	err  error
+	app    *application.Application
+	server *Server
+	cnf    *config.Config
+	fs     *embed.FS
+	root   string
+	opts   []Option
+	err    error
 }
 
 func Default(options ...Option) *Web {
@@ -41,52 +42,42 @@ func (w *Web) init() {
 			w.app.Logger().Error(errMsg)
 		}
 	})
-
-	cnf, err := config.Parse()
-	if err != nil {
-		w.err = errors.New("config parse failed, err=" + err.Error())
+	if w.cnf, w.err = config.Parse(); w.err != nil {
+		w.err = errors.New("config parse failed, err=" + w.err.Error())
 		return
 	}
-	w.c = cnf
-	w.app = application.New(cnf.Http.Name,
-		application.CusCluster(application.NewCluster(cnf.Application.Id, cnf.Application.Name)),
+	w.app = application.New(w.cnf.Http.Name,
+		application.CusCluster(application.NewCluster(w.cnf.Application.Id, w.cnf.Application.Name)),
 		application.Debug(func() bool {
-			return cnf.Application.Debug
+			return w.cnf.Application.Debug
 		}),
-		application.Logger(cnf.Log),
+		application.Logger(w.cnf.Log),
 	)
 	defer w.app.Release()
 
 	var rp map[string]func([]byte) []byte
-	for _, item := range cnf.Http.Replace {
+	for _, item := range w.cnf.Http.Replace {
 		for k, v := range item.Items {
 			rp[item.File] = func(b []byte) []byte {
 				return []byte(strings.ReplaceAll(string(b), k, v))
 			}
 		}
 	}
-
 	options := append([]Option{
-		Cors(cnf.Cors),
-		TrustedProxies(cnf.Http.TrustedProxies),
-		RouteDebug(cnf.Http.RouteDebug),
-		CacheTtl(cnf.Http.CacheTtl),
+		Cors(w.cnf.Cors),
+		TrustedProxies(w.cnf.Http.TrustedProxies),
+		RouteDebug(w.cnf.Http.RouteDebug),
+		CacheTtl(w.cnf.Http.CacheTtl),
 		Replace(rp),
 	}, w.opts...)
-	s := New(w.app, cnf.Http.Name, url.New(cnf.Application.InternalIp, cnf.Http.Port), options...)
+	w.server = New(w.app, w.cnf.Http.Name, url.New(w.cnf.Application.InternalIp, w.cnf.Http.Port), options...)
 
-	if dir := cnf.Http.Directory(); dir != "" {
-		if err = s.RegisterDir(dir, cnf.Http.DirRoot); err != nil {
-			w.err = errors.New("dir failed, err=" + err.Error())
+	if dir := w.cnf.Http.Directory(); dir != "" {
+		if w.err = w.server.RegisterDir(dir, w.cnf.Http.DirRoot); w.err != nil {
+			w.err = errors.New("dir failed, err=" + w.err.Error())
 			return
 		}
 	}
-
-	if w.fs != nil && w.root != "" {
-		s.RegisterAsset(w.fs, w.root)
-	}
-
-	w.app.AddServer(s)
 	return
 }
 
@@ -95,10 +86,13 @@ func (w *Web) Serve() {
 		color.Error.Println("config parse failed, err=" + w.err.Error())
 		os.Exit(1)
 	}
+	if w.fs != nil && w.root != "" {
+		w.server.RegisterAsset(w.fs, w.root)
+	}
+	w.app.AddServer(w.server)
 	w.app.Run(func(err error) {
 		color.Error.Println(err.Error())
 	})
-
 	if w.Config().Http.Directory() != "" {
 		color.Info.Println(fmt.Sprintf("asset web[%s] root directory: %s", w.Config().Http.Name, w.Config().Http.Directory()))
 	}
@@ -108,5 +102,5 @@ func (w *Web) Serve() {
 }
 
 func (w *Web) Config() *config.Config {
-	return w.c
+	return w.cnf
 }
