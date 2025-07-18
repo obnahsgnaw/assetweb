@@ -108,3 +108,15 @@ func (w *Web) Serve() {
 func (w *Web) Config() *config.Config {
 	return w.cnf
 }
+
+func (w *Web) App() *application.Application {
+	return w.app
+}
+
+func (w *Web) Server() *Server {
+	return w.server
+}
+
+func (w *Web) Error() error {
+	return w.err
+}
